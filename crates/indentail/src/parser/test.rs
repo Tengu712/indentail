@@ -297,7 +297,6 @@ fn test_slum() {
                 ..Default::default()
             },
         ],
-        ..Default::default()
     }];
 
     assert_eq!(parse(code).unwrap(), expected);
