@@ -9,4 +9,5 @@ path = "src/main.rs"
 doc = false
 
 [dependencies]
+bpaf = { version = "0.9.28", features = ["derive"] }
 indentail = { path = "../indentail" }

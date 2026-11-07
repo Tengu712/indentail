@@ -5,11 +5,11 @@ use std::iter;
 mod test;
 
 impl Node {
-    pub fn format(&self, max_width: usize, tab_spaces: usize) -> String {
+    pub fn format(&self, max_width: usize, indent_spaces: usize) -> String {
         let mut formatter = Formatter {
             out: Default::default(),
             max_width,
-            tab_spaces,
+            indent_spaces,
         };
         formatter.node(self, 0);
         formatter.out
@@ -19,7 +19,7 @@ impl Node {
 struct Formatter {
     out: String,
     max_width: usize,
-    tab_spaces: usize,
+    indent_spaces: usize,
 }
 
 impl Formatter {
@@ -77,7 +77,7 @@ impl Formatter {
         // )
         else {
             self.push(&["("]);
-            let option_indent = indent + self.tab_spaces;
+            let option_indent = indent + self.indent_spaces;
             for option in &options {
                 self.newline(option_indent);
                 if self.fits(option_indent, &[&option[..], &[","]].concat()) {
@@ -86,7 +86,7 @@ impl Formatter {
                 } else {
                     let [k, colon, _, v] = option;
                     self.push(&[k, colon]);
-                    self.newline(option_indent + self.tab_spaces);
+                    self.newline(option_indent + self.indent_spaces);
                     self.push(&[v, ","]);
                 }
             }
@@ -101,8 +101,8 @@ impl Formatter {
         if !node.children.is_empty() {
             self.push(&[opener]);
             for child in &node.children {
-                self.newline(indent + self.tab_spaces);
-                self.node(child, indent + self.tab_spaces);
+                self.newline(indent + self.indent_spaces);
+                self.node(child, indent + self.indent_spaces);
             }
             self.newline(indent);
             self.push(&["}"]);
@@ -110,7 +110,7 @@ impl Formatter {
 
         // push modifiers
         let modifier_indent = if node.children.is_empty() {
-            indent + self.tab_spaces
+            indent + self.indent_spaces
         } else {
             indent
         };
@@ -126,7 +126,7 @@ impl Formatter {
             else {
                 let [dot, name, open, value, close] = modifier;
                 self.push(&[dot, name, open]);
-                self.newline(modifier_indent + self.tab_spaces);
+                self.newline(modifier_indent + self.indent_spaces);
                 self.push(&[value]);
                 self.newline(modifier_indent);
                 self.push(&[close]);

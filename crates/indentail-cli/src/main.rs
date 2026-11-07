@@ -1,28 +1,33 @@
+use bpaf::Bpaf;
 use indentail::{Input, Options, error::*, parse};
-use std::{env, path::PathBuf, process::ExitCode};
+use std::{path::PathBuf, process::ExitCode};
 
-const HELP: &str = "\
-usage: indentail <file-path>+\
-";
+#[derive(Bpaf)]
+#[bpaf(options)]
+struct Args {
+    #[bpaf(long, argument("N"), fallback(100), display_fallback)]
+    max_width: usize,
+    #[bpaf(long, argument("N"), fallback(4), display_fallback)]
+    indent_spaces: usize,
+    #[bpaf(positional("FILE"), some("expected at least one FILE"))]
+    paths: Vec<PathBuf>,
+}
 
 fn main() -> ExitCode {
-    let args: Vec<String> = env::args().skip(1).collect();
-    if args.is_empty() {
-        eprintln!("{HELP}");
-        return ExitCode::from(1);
-    }
+    let args = args().run();
 
-    for path in args {
+    for path in args.paths {
         let options = Options {
-            input: Input::FilePath(PathBuf::from(&path)),
+            input: Input::FilePath(path.clone()),
         };
         match parse(options) {
             Ok(v) => {
                 for node in v {
-                    println!("{}", node.format(100, 4));
+                    println!("{}", node.format(args.max_width, args.indent_spaces));
                 }
             }
             Err(e) => {
+                let path = path.display();
                 match e {
                     IndentailError::Syntax { .. } => eprintln!("{path}:{e}"),
                     IndentailError::IO(_) => eprintln!("{path}: {e}"),
