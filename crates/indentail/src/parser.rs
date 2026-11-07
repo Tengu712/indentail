@@ -80,6 +80,12 @@ pub(crate) fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
                 char_count += 1;
             }
 
+            '.' if !state.is_in_paren() => {
+                flush!();
+                state = state.start_modifier(line_count, char_count)?;
+                char_count += 1;
+            }
+
             '{' => {
                 flush!();
 

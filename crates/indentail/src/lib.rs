@@ -24,6 +24,7 @@ pub enum SyntaxErrorDetail {
     InvalidToken(String),
     InvalidColon,
     InvalidComma,
+    InvalidDot,
     InvalidLeftParen,
     InvalidRightParen,
     UnclosedParen,

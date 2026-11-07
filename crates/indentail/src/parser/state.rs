@@ -7,6 +7,14 @@ pub(crate) enum OptionState {
     Valued((String, String)),
 }
 
+pub(crate) enum ModifierState {
+    Empty,
+    Dotted,
+    Named(String),
+    Valuing(String),
+    Valued((String, String)),
+}
+
 #[derive(Default)]
 pub(crate) enum State {
     #[default]
@@ -28,6 +36,7 @@ pub(crate) enum State {
         options: HashMap<String, String>,
         modifiers: Vec<(String, String)>,
         children: Vec<Node>,
+        state: ModifierState,
     },
 }
 
@@ -54,6 +63,7 @@ impl State {
                 options,
                 modifiers,
                 children,
+                state: ModifierState::Empty,
             } => (
                 Some(Node {
                     tag,
@@ -65,6 +75,17 @@ impl State {
             ),
             _ => (None, self),
         }
+    }
+
+    pub(crate) fn is_in_paren(&self) -> bool {
+        matches!(
+            self,
+            Self::Optioning { .. }
+                | Self::Modifying {
+                    state: ModifierState::Valuing(_) | ModifierState::Valued(_),
+                    ..
+                }
+        )
     }
 
     pub(crate) fn append(
@@ -93,6 +114,32 @@ impl State {
                 options,
                 state: OptionState::Valued((key, buffer)),
             }),
+            Self::Modifying {
+                tag,
+                options,
+                modifiers,
+                children,
+                state: ModifierState::Dotted,
+            } => Ok(Self::Modifying {
+                tag,
+                options,
+                modifiers,
+                children,
+                state: ModifierState::Named(buffer),
+            }),
+            Self::Modifying {
+                tag,
+                options,
+                modifiers,
+                children,
+                state: ModifierState::Valuing(name),
+            } => Ok(Self::Modifying {
+                tag,
+                options,
+                modifiers,
+                children,
+                state: ModifierState::Valued((name, buffer)),
+            }),
             _ => Err(IndentailError::Syntax {
                 line: line_count,
                 column: char_count,
@@ -111,6 +158,19 @@ impl State {
                 tag,
                 options: Default::default(),
                 state: OptionState::Empty,
+            }),
+            Self::Modifying {
+                tag,
+                options,
+                modifiers,
+                children,
+                state: ModifierState::Named(name),
+            } => Ok(Self::Modifying {
+                tag,
+                options,
+                modifiers,
+                children,
+                state: ModifierState::Valuing(name),
             }),
             _ => Err(IndentailError::Syntax {
                 line: line_count,
@@ -138,6 +198,22 @@ impl State {
             } => {
                 options.insert(key, value);
                 Ok(Self::Optioned { tag, options })
+            }
+            Self::Modifying {
+                tag,
+                options,
+                mut modifiers,
+                children,
+                state: ModifierState::Valued((name, value)),
+            } => {
+                modifiers.push((name, value));
+                Ok(Self::Modifying {
+                    tag,
+                    options,
+                    modifiers,
+                    children,
+                    state: ModifierState::Empty,
+                })
             }
             _ => Err(IndentailError::Syntax {
                 line: line_count,
@@ -196,6 +272,47 @@ impl State {
         }
     }
 
+    pub(crate) fn start_modifier(
+        self,
+        line_count: usize,
+        char_count: usize,
+    ) -> Result<Self, IndentailError> {
+        match self {
+            Self::Tagged { tag } => Ok(Self::Modifying {
+                tag,
+                options: Default::default(),
+                modifiers: Default::default(),
+                children: Default::default(),
+                state: ModifierState::Dotted,
+            }),
+            Self::Optioned { tag, options } => Ok(Self::Modifying {
+                tag,
+                options,
+                modifiers: Default::default(),
+                children: Default::default(),
+                state: ModifierState::Dotted,
+            }),
+            Self::Modifying {
+                tag,
+                options,
+                modifiers,
+                children,
+                state: ModifierState::Empty,
+            } => Ok(Self::Modifying {
+                tag,
+                options,
+                modifiers,
+                children,
+                state: ModifierState::Dotted,
+            }),
+            _ => Err(IndentailError::Syntax {
+                line: line_count,
+                column: char_count,
+                detail: SyntaxErrorDetail::InvalidDot,
+            }),
+        }
+    }
+
     pub(crate) fn set_children(self, children: Vec<Node>) -> Result<Self, IndentailError> {
         match self {
             Self::Tagged { tag } => Ok(Self::Modifying {
@@ -203,12 +320,14 @@ impl State {
                 options: Default::default(),
                 modifiers: Default::default(),
                 children,
+                state: ModifierState::Empty,
             }),
             Self::Optioned { tag, options } => Ok(Self::Modifying {
                 tag,
                 options,
                 modifiers: Default::default(),
                 children,
+                state: ModifierState::Empty,
             }),
             _ => unreachable!(),
         }

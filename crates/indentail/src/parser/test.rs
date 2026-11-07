@@ -177,18 +177,74 @@ fn test_quote_in_the_middle() {
 }
 
 #[test]
+fn test_modifiers() {
+    let code = "
+Tag1.m1(v1)
+Tag2(a: b)
+    .'m 2'('v 2')
+    .'.m3'(v3)
+Tag3 { Tag4 }.m4(v4)
+"
+    .to_string();
+    let expected = vec![
+        Node {
+            tag: "Tag1".to_string(),
+            modifiers: vec![("m1".to_string(), "v1".to_string())],
+            ..Default::default()
+        },
+        Node {
+            tag: "Tag2".to_string(),
+            options: HashMap::from([("a".to_string(), "b".to_string())]),
+            modifiers: vec![
+                ("m 2".to_string(), "v 2".to_string()),
+                (".m3".to_string(), "v3".to_string()),
+            ],
+            ..Default::default()
+        },
+        Node {
+            tag: "Tag3".to_string(),
+            modifiers: vec![("m4".to_string(), "v4".to_string())],
+            children: vec![Node {
+                tag: "Tag4".to_string(),
+                ..Default::default()
+            }],
+            ..Default::default()
+        },
+    ];
+
+    assert_eq!(parse(code), Ok(expected));
+}
+
+#[test]
+fn test_dot_in_paren() {
+    let code = "Tag(a.b: c.d).m(v.w)".to_string();
+    let expected = vec![Node {
+        tag: "Tag".to_string(),
+        options: HashMap::from([("a.b".to_string(), "c.d".to_string())]),
+        modifiers: vec![("m".to_string(), "v.w".to_string())],
+        ..Default::default()
+    }];
+
+    assert_eq!(parse(code), Ok(expected));
+}
+
+#[test]
 fn test_slum() {
     let code = "
 //s 日本語のあるcomment
 	Tag/\\-あ(
 😄: a🤛💥  ,  	 ){//
-    !@#$%^&* -+12345 6 {? (<  :>)}
+    !@#$%^&* -+12345 6.7(8) ~ {? (<  :>)}
     // Tag(opt: val)
-}"
+}
+.😇😎
+(
+ あ)"
     .to_string();
     let expected = vec![Node {
         tag: "Tag/\\-あ".to_string(),
         options: HashMap::from([("😄".to_string(), "a🤛💥".to_string())]),
+        modifiers: vec![("😇😎".to_string(), "あ".to_string())],
         children: vec![
             Node {
                 tag: "!@#$%^&*".to_string(),
@@ -200,6 +256,11 @@ fn test_slum() {
             },
             Node {
                 tag: "6".to_string(),
+                modifiers: vec![("7".to_string(), "8".to_string())],
+                ..Default::default()
+            },
+            Node {
+                tag: "~".to_string(),
                 children: vec![Node {
                     tag: "?".to_string(),
                     options: HashMap::from([("<".to_string(), ">".to_string())]),
@@ -341,6 +402,54 @@ fn test_unclosed_quote() {
         line: 1,
         column: 5,
         detail: SyntaxErrorDetail::UnclosedQuote,
+    };
+
+    assert_eq!(parse(code), Err(expected));
+}
+
+#[test]
+fn test_invalid_dot() {
+    let code = ".Tag(a: b)".to_string();
+    let expected = IndentailError::Syntax {
+        line: 1,
+        column: 1,
+        detail: SyntaxErrorDetail::InvalidDot,
+    };
+
+    assert_eq!(parse(code), Err(expected));
+}
+
+#[test]
+fn test_modifier_without_value() {
+    let code = "Tag.m()".to_string();
+    let expected = IndentailError::Syntax {
+        line: 1,
+        column: 7,
+        detail: SyntaxErrorDetail::InvalidRightParen,
+    };
+
+    assert_eq!(parse(code), Err(expected));
+}
+
+#[test]
+fn test_options_after_modifier() {
+    let code = "Tag.m(v)(a: b)".to_string();
+    let expected = IndentailError::Syntax {
+        line: 1,
+        column: 9,
+        detail: SyntaxErrorDetail::InvalidLeftParen,
+    };
+
+    assert_eq!(parse(code), Err(expected));
+}
+
+#[test]
+fn test_children_after_modifier() {
+    let code = "Tag.m(v) {}".to_string();
+    let expected = IndentailError::Syntax {
+        line: 1,
+        column: 10,
+        detail: SyntaxErrorDetail::InvalidLeftBrace,
     };
 
     assert_eq!(parse(code), Err(expected));
