@@ -1,0 +1,6 @@
+[workspace]
+members = [
+  "crates/indentail",
+  "crates/indentail-cli",
+]
+resolver = "3"
