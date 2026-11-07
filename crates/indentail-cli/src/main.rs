@@ -1,6 +1,6 @@
 use bpaf::Bpaf;
 use indentail::{Input, Options, error::*, parse};
-use std::{path::PathBuf, process::ExitCode};
+use std::{fs, path::PathBuf, process::ExitCode};
 
 #[derive(Bpaf)]
 #[bpaf(options)]
@@ -9,12 +9,15 @@ struct Args {
     max_width: usize,
     #[bpaf(long, argument("N"), fallback(4), display_fallback)]
     indent_spaces: usize,
+    #[bpaf(short, long, argument("PATH"))]
+    out_path: Option<PathBuf>,
     #[bpaf(positional("FILE"), some("expected at least one FILE"))]
     paths: Vec<PathBuf>,
 }
 
 fn main() -> ExitCode {
     let args = args().run();
+    let mut out = String::new();
 
     for path in args.paths {
         let options = Options {
@@ -23,7 +26,8 @@ fn main() -> ExitCode {
         match parse(options) {
             Ok(v) => {
                 for node in v {
-                    println!("{}", node.format(args.max_width, args.indent_spaces));
+                    out.push_str(&node.format(args.max_width, args.indent_spaces));
+                    out.push('\n');
                 }
             }
             Err(e) => {
@@ -35,6 +39,15 @@ fn main() -> ExitCode {
                 return ExitCode::from(1);
             }
         }
+    }
+
+    if let Some(path) = args.out_path {
+        if let Err(e) = fs::write(&path, out) {
+            eprintln!("{}: {e}", path.display());
+            return ExitCode::from(1);
+        }
+    } else {
+        print!("{out}");
     }
 
     ExitCode::from(0)
