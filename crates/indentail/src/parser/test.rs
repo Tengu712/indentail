@@ -216,6 +216,23 @@ Tag3 { Tag4 }.m4(v4)
 }
 
 #[test]
+fn test_sign_out_of_paren() {
+    let code = "Tag:1 Tag,2".to_string();
+    let expected = vec![
+        Node {
+            tag: "Tag:1".to_string(),
+            ..Default::default()
+        },
+        Node {
+            tag: "Tag,2".to_string(),
+            ..Default::default()
+        },
+    ];
+
+    assert_eq!(parse(code), Ok(expected));
+}
+
+#[test]
 fn test_dot_in_paren() {
     let code = "Tag(a.b: c.d).m(v.w)".to_string();
     let expected = vec![Node {
@@ -234,7 +251,7 @@ fn test_slum() {
 //s 日本語のあるcomment
 	Tag/\\-あ(
 😄: a🤛💥  ,  	 ){//
-    !@#$%^&* -+12345 6.7(8) ~ {? (<  :>)}
+    !@#$%^&*: -+12345 6.7(8) ~ {, (<  :>)}
     // Tag(opt: val)
 }
 .😇😎
@@ -247,7 +264,7 @@ fn test_slum() {
         modifiers: vec![("😇😎".to_string(), "あ".to_string())],
         children: vec![
             Node {
-                tag: "!@#$%^&*".to_string(),
+                tag: "!@#$%^&*:".to_string(),
                 ..Default::default()
             },
             Node {
@@ -262,7 +279,7 @@ fn test_slum() {
             Node {
                 tag: "~".to_string(),
                 children: vec![Node {
-                    tag: "?".to_string(),
+                    tag: ",".to_string(),
                     options: HashMap::from([("<".to_string(), ">".to_string())]),
                     ..Default::default()
                 }],
@@ -289,10 +306,34 @@ fn test_invalid_token() {
 
 #[test]
 fn test_invalid_colon() {
-    let code = "Tag: opt1".to_string();
+    let code = "Tag(:)".to_string();
     let expected = IndentailError::Syntax {
         line: 1,
-        column: 4,
+        column: 5,
+        detail: SyntaxErrorDetail::InvalidColon,
+    };
+
+    assert_eq!(parse(code), Err(expected));
+}
+
+#[test]
+fn test_invalid_colon2() {
+    let code = "Tag(opt::value)".to_string();
+    let expected = IndentailError::Syntax {
+        line: 1,
+        column: 9,
+        detail: SyntaxErrorDetail::InvalidColon,
+    };
+
+    assert_eq!(parse(code), Err(expected));
+}
+
+#[test]
+fn test_invalid_colon3() {
+    let code = "Tag(opt: value:)".to_string();
+    let expected = IndentailError::Syntax {
+        line: 1,
+        column: 15,
         detail: SyntaxErrorDetail::InvalidColon,
     };
 
@@ -305,6 +346,30 @@ fn test_invalid_comma() {
     let expected = IndentailError::Syntax {
         line: 1,
         column: 5,
+        detail: SyntaxErrorDetail::InvalidComma,
+    };
+
+    assert_eq!(parse(code), Err(expected));
+}
+
+#[test]
+fn test_invalid_comma2() {
+    let code = "Tag(a,)".to_string();
+    let expected = IndentailError::Syntax {
+        line: 1,
+        column: 6,
+        detail: SyntaxErrorDetail::InvalidComma,
+    };
+
+    assert_eq!(parse(code), Err(expected));
+}
+
+#[test]
+fn test_invalid_comma3() {
+    let code = "Tag(a: b,,)".to_string();
+    let expected = IndentailError::Syntax {
+        line: 1,
+        column: 10,
         detail: SyntaxErrorDetail::InvalidComma,
     };
 

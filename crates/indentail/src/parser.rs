@@ -56,6 +56,24 @@ pub(crate) fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
                 char_count = 1;
             }
 
+            ':' if state.is_in_paren() => {
+                flush!();
+                state = state.separate_option(line_count, char_count)?;
+                char_count += 1;
+            }
+
+            ',' if state.is_in_paren() => {
+                flush!();
+                state = state.advance_option(line_count, char_count)?;
+                char_count += 1;
+            }
+
+            '.' if !state.is_in_paren() => {
+                flush!();
+                state = state.start_modifier(line_count, char_count)?;
+                char_count += 1;
+            }
+
             '(' => {
                 flush!();
                 state = state.open_paren(line_count, char_count)?;
@@ -65,24 +83,6 @@ pub(crate) fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
             ')' => {
                 flush!();
                 state = state.close_paren(line_count, char_count)?;
-                char_count += 1;
-            }
-
-            ':' => {
-                flush!();
-                state = state.separate_option(line_count, char_count)?;
-                char_count += 1;
-            }
-
-            ',' => {
-                flush!();
-                state = state.advance_option(line_count, char_count)?;
-                char_count += 1;
-            }
-
-            '.' if !state.is_in_paren() => {
-                flush!();
-                state = state.start_modifier(line_count, char_count)?;
                 char_count += 1;
             }
 
