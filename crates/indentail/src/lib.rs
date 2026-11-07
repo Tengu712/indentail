@@ -34,6 +34,7 @@ pub enum SyntaxErrorDetail {
     UnclosedBrace,
     InvalidEscape(char),
     UnclosedQuote,
+    DuplicateOption(String),
 }
 
 #[derive(Debug, Clone)]

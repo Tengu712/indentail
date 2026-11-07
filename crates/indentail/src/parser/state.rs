@@ -100,11 +100,23 @@ impl State {
                 tag,
                 options,
                 state: OptionState::Empty,
-            } => Ok(Self::Optioning {
-                tag,
-                options,
-                state: OptionState::Keyed(buffer),
-            }),
+            } => {
+                // HACK: Checked here rather than on insertion into `options`
+                //       to avoid storing each key's source position.
+                if !options.contains_key(&buffer) {
+                    Ok(Self::Optioning {
+                        tag,
+                        options,
+                        state: OptionState::Keyed(buffer),
+                    })
+                } else {
+                    Err(IndentailError::Syntax {
+                        line: line_count,
+                        column: char_count,
+                        detail: SyntaxErrorDetail::DuplicateOption(buffer),
+                    })
+                }
+            }
             Self::Optioning {
                 tag,
                 options,

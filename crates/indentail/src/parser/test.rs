@@ -454,3 +454,11 @@ fn test_children_after_modifier() {
         (1, 10, SyntaxErrorDetail::InvalidLeftBrace)
     );
 }
+
+#[test]
+fn test_duplicate_option() {
+    assert_eq!(
+        syntax_error("Tag(k1: v1, k2: v2, k1: v3)"),
+        (1, 21, SyntaxErrorDetail::DuplicateOption("k1".to_string()))
+    );
+}
