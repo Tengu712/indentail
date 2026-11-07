@@ -3,5 +3,10 @@ name = "indentail-cli"
 version = "0.1.0"
 edition = "2024"
 
+[[bin]]
+name = "indentail"
+path = "src/main.rs"
+doc = false
+
 [dependencies]
 indentail = { path = "../indentail" }

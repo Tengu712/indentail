@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, fs, io, path::PathBuf};
 
 mod parser;
 
@@ -10,13 +10,14 @@ pub struct Node {
     pub children: Vec<Node>,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub enum IndentailError {
     Syntax {
         line: usize,
         column: usize,
         detail: SyntaxErrorDetail,
     },
+    IO(io::Error),
 }
 
 #[derive(Debug, PartialEq)]
@@ -43,14 +44,14 @@ pub struct Options {
 #[derive(Debug, Clone)]
 pub enum Input {
     Inline(String),
-    FilePath(String),
+    FilePath(PathBuf),
 }
 
 impl Input {
     fn get(self) -> Result<String, IndentailError> {
         match self {
             Self::Inline(v) => Ok(v),
-            Self::FilePath(_) => unimplemented!(),
+            Self::FilePath(v) => fs::read_to_string(v).map_err(IndentailError::IO),
         }
     }
 }

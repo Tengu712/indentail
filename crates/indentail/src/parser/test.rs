@@ -1,11 +1,22 @@
 use super::*;
 
+fn syntax_error(code: &str) -> (usize, usize, SyntaxErrorDetail) {
+    match parse(code.to_string()) {
+        Err(IndentailError::Syntax {
+            line,
+            column,
+            detail,
+        }) => (line, column, detail),
+        r => panic!("{r:?}"),
+    }
+}
+
 #[test]
 fn test_only_comment() {
     let code = "// Hello, world!".to_string();
     let expected = vec![];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -16,7 +27,7 @@ fn test_only_tag() {
         ..Default::default()
     }];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -33,7 +44,7 @@ fn test_contiguous_tags() {
         },
     ];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -44,7 +55,7 @@ fn test_empty_option() {
         ..Default::default()
     }];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -59,7 +70,7 @@ fn test_optioned() {
         ..Default::default()
     }];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -74,7 +85,7 @@ fn test_trailing_comma() {
         ..Default::default()
     }];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -85,7 +96,7 @@ fn test_empty_children() {
         ..Default::default()
     }];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -130,7 +141,7 @@ Tag5{}
         },
     ];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -144,7 +155,7 @@ fn test_quote() {
         ..Default::default()
     }];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -152,7 +163,7 @@ fn test_empty_quote() {
     let code = "''".to_string();
     let expected = vec![];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -173,7 +184,7 @@ fn test_quote_in_the_middle() {
         },
     ];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -212,7 +223,7 @@ Tag3 { Tag4 }.m4(v4)
         },
     ];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -229,7 +240,7 @@ fn test_sign_out_of_paren() {
         },
     ];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -242,7 +253,7 @@ fn test_dot_in_paren() {
         ..Default::default()
     }];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
@@ -289,233 +300,157 @@ fn test_slum() {
         ..Default::default()
     }];
 
-    assert_eq!(parse(code), Ok(expected));
+    assert_eq!(parse(code).unwrap(), expected);
 }
 
 #[test]
 fn test_invalid_token() {
-    let code = "Tag(opt1 val1)".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 10,
-        detail: SyntaxErrorDetail::InvalidToken("val1".to_string()),
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag(opt1 val1)"),
+        (1, 10, SyntaxErrorDetail::InvalidToken("val1".to_string()))
+    );
 }
 
 #[test]
 fn test_invalid_colon() {
-    let code = "Tag(:)".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 5,
-        detail: SyntaxErrorDetail::InvalidColon,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag(:)"),
+        (1, 5, SyntaxErrorDetail::InvalidColon)
+    );
 }
 
 #[test]
 fn test_invalid_colon2() {
-    let code = "Tag(opt::value)".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 9,
-        detail: SyntaxErrorDetail::InvalidColon,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag(opt::value)"),
+        (1, 9, SyntaxErrorDetail::InvalidColon)
+    );
 }
 
 #[test]
 fn test_invalid_colon3() {
-    let code = "Tag(opt: value:)".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 15,
-        detail: SyntaxErrorDetail::InvalidColon,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag(opt: value:)"),
+        (1, 15, SyntaxErrorDetail::InvalidColon)
+    );
 }
 
 #[test]
 fn test_invalid_comma() {
-    let code = "Tag(,)".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 5,
-        detail: SyntaxErrorDetail::InvalidComma,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag(,)"),
+        (1, 5, SyntaxErrorDetail::InvalidComma)
+    );
 }
 
 #[test]
 fn test_invalid_comma2() {
-    let code = "Tag(a,)".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 6,
-        detail: SyntaxErrorDetail::InvalidComma,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag(a,)"),
+        (1, 6, SyntaxErrorDetail::InvalidComma)
+    );
 }
 
 #[test]
 fn test_invalid_comma3() {
-    let code = "Tag(a: b,,)".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 10,
-        detail: SyntaxErrorDetail::InvalidComma,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag(a: b,,)"),
+        (1, 10, SyntaxErrorDetail::InvalidComma)
+    );
 }
 
 #[test]
 fn test_invalid_left_paren() {
-    let code = "Tag {} (opt1: val1)".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 8,
-        detail: SyntaxErrorDetail::InvalidLeftParen,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag {} (opt1: val1)"),
+        (1, 8, SyntaxErrorDetail::InvalidLeftParen)
+    );
 }
 
 #[test]
 fn test_invalid_right_paren() {
-    let code = "Tag )".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 5,
-        detail: SyntaxErrorDetail::InvalidRightParen,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag )"),
+        (1, 5, SyntaxErrorDetail::InvalidRightParen)
+    );
 }
 
 #[test]
 fn test_unclosed_paren() {
-    let code = "Tag(a: b".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 9,
-        detail: SyntaxErrorDetail::UnclosedParen,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag(a: b"),
+        (1, 9, SyntaxErrorDetail::UnclosedParen)
+    );
 }
 
 #[test]
 fn test_invalid_left_brace() {
-    let code = "Tag(opt1: {})".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 11,
-        detail: SyntaxErrorDetail::InvalidLeftBrace,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag(opt1: {})"),
+        (1, 11, SyntaxErrorDetail::InvalidLeftBrace)
+    );
 }
 
 #[test]
 fn test_invalid_right_brace() {
-    let code = "Tag }".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 5,
-        detail: SyntaxErrorDetail::InvalidRightBrace,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag }"),
+        (1, 5, SyntaxErrorDetail::InvalidRightBrace)
+    );
 }
 
 #[test]
 fn test_unclosed_brace() {
-    let code = "Tag { Tag2".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 11,
-        detail: SyntaxErrorDetail::UnclosedBrace,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag { Tag2"),
+        (1, 11, SyntaxErrorDetail::UnclosedBrace)
+    );
 }
 
 #[test]
 fn test_invalid_escape() {
-    let code = r#"Tag('a\x')"#.to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 7,
-        detail: SyntaxErrorDetail::InvalidEscape('x'),
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error(r#"Tag('a\x')"#),
+        (1, 7, SyntaxErrorDetail::InvalidEscape('x'))
+    );
 }
 
 #[test]
 fn test_unclosed_quote() {
-    let code = "Tag 'a\nb".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 5,
-        detail: SyntaxErrorDetail::UnclosedQuote,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag 'a\nb"),
+        (1, 5, SyntaxErrorDetail::UnclosedQuote)
+    );
 }
 
 #[test]
 fn test_invalid_dot() {
-    let code = ".Tag(a: b)".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 1,
-        detail: SyntaxErrorDetail::InvalidDot,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error(".Tag(a: b)"),
+        (1, 1, SyntaxErrorDetail::InvalidDot)
+    );
 }
 
 #[test]
 fn test_modifier_without_value() {
-    let code = "Tag.m()".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 7,
-        detail: SyntaxErrorDetail::InvalidRightParen,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag.m()"),
+        (1, 7, SyntaxErrorDetail::InvalidRightParen)
+    );
 }
 
 #[test]
 fn test_options_after_modifier() {
-    let code = "Tag.m(v)(a: b)".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 9,
-        detail: SyntaxErrorDetail::InvalidLeftParen,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag.m(v)(a: b)"),
+        (1, 9, SyntaxErrorDetail::InvalidLeftParen)
+    );
 }
 
 #[test]
 fn test_children_after_modifier() {
-    let code = "Tag.m(v) {}".to_string();
-    let expected = IndentailError::Syntax {
-        line: 1,
-        column: 10,
-        detail: SyntaxErrorDetail::InvalidLeftBrace,
-    };
-
-    assert_eq!(parse(code), Err(expected));
+    assert_eq!(
+        syntax_error("Tag.m(v) {}"),
+        (1, 10, SyntaxErrorDetail::InvalidLeftBrace)
+    );
 }
