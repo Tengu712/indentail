@@ -1,6 +1,7 @@
 use std::{collections::HashMap, fs, path::PathBuf};
 
 pub mod error;
+mod format;
 mod parser;
 
 use error::*;

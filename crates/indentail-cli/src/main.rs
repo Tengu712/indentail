@@ -17,7 +17,11 @@ fn main() -> ExitCode {
             input: Input::FilePath(PathBuf::from(&path)),
         };
         match parse(options) {
-            Ok(v) => println!("{v:?}"),
+            Ok(v) => {
+                for node in v {
+                    println!("{}", node.format(100, 4));
+                }
+            }
             Err(e) => {
                 match e {
                     IndentailError::Syntax { .. } => eprintln!("{path}:{e}"),
