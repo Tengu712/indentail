@@ -134,6 +134,49 @@ Tag5{}
 }
 
 #[test]
+fn test_quote() {
+    let code = r#"'Tag 1'('key
+1': '\\\t\r\n\'')"#
+        .to_string();
+    let expected = vec![Node {
+        tag: "Tag 1".to_string(),
+        options: HashMap::from([("key\n1".to_string(), "\\\t\r\n'".to_string())]),
+        ..Default::default()
+    }];
+
+    assert_eq!(parse(code), Ok(expected));
+}
+
+#[test]
+fn test_empty_quote() {
+    let code = "''".to_string();
+    let expected = vec![];
+
+    assert_eq!(parse(code), Ok(expected));
+}
+
+#[test]
+fn test_quote_in_the_middle() {
+    let code = "ab'c'de".to_string();
+    let expected = vec![
+        Node {
+            tag: "ab".to_string(),
+            ..Default::default()
+        },
+        Node {
+            tag: "c".to_string(),
+            ..Default::default()
+        },
+        Node {
+            tag: "de".to_string(),
+            ..Default::default()
+        },
+    ];
+
+    assert_eq!(parse(code), Ok(expected));
+}
+
+#[test]
 fn test_slum() {
     let code = "
 //s 日本語のあるcomment
@@ -274,6 +317,30 @@ fn test_unclosed_brace() {
         line: 1,
         column: 11,
         detail: SyntaxErrorDetail::UnclosedBrace,
+    };
+
+    assert_eq!(parse(code), Err(expected));
+}
+
+#[test]
+fn test_invalid_escape() {
+    let code = r#"Tag('a\x')"#.to_string();
+    let expected = IndentailError::Syntax {
+        line: 1,
+        column: 7,
+        detail: SyntaxErrorDetail::InvalidEscape('x'),
+    };
+
+    assert_eq!(parse(code), Err(expected));
+}
+
+#[test]
+fn test_unclosed_quote() {
+    let code = "Tag 'a\nb".to_string();
+    let expected = IndentailError::Syntax {
+        line: 1,
+        column: 5,
+        detail: SyntaxErrorDetail::UnclosedQuote,
     };
 
     assert_eq!(parse(code), Err(expected));

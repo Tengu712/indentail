@@ -116,6 +116,59 @@ pub(crate) fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
                 char_count += 1;
             }
 
+            '\'' => {
+                flush!();
+                buffer_start_line_count = line_count;
+                buffer_start_char_count = char_count;
+                char_count += 1;
+
+                loop {
+                    let Some(c) = itr.next() else {
+                        return Err(IndentailError::Syntax {
+                            line: buffer_start_line_count,
+                            column: buffer_start_char_count,
+                            detail: SyntaxErrorDetail::UnclosedQuote,
+                        });
+                    };
+                    match c {
+                        '\'' => {
+                            char_count += 1;
+                            break;
+                        }
+                        '\\' => {
+                            let c = match itr.next() {
+                                Some('\\') => '\\',
+                                Some('t') => '\t',
+                                Some('r') => '\r',
+                                Some('n') => '\n',
+                                Some('\'') => '\'',
+                                Some(c) => {
+                                    return Err(IndentailError::Syntax {
+                                        line: line_count,
+                                        column: char_count,
+                                        detail: SyntaxErrorDetail::InvalidEscape(c),
+                                    });
+                                }
+                                None => continue,
+                            };
+                            buffer.push(c);
+                            char_count += 2;
+                        }
+                        '\r' | '\n' => {
+                            buffer.push(c);
+                            line_count += 1;
+                            char_count = 1;
+                        }
+                        _ => {
+                            buffer.push(c);
+                            char_count += 1;
+                        }
+                    }
+                }
+
+                flush!();
+            }
+
             _ => {
                 if buffer.is_empty() {
                     buffer_start_line_count = line_count;

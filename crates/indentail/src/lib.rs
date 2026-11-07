@@ -30,6 +30,8 @@ pub enum SyntaxErrorDetail {
     InvalidLeftBrace,
     InvalidRightBrace,
     UnclosedBrace,
+    InvalidEscape(char),
+    UnclosedQuote,
 }
 
 #[derive(Debug, Clone)]
