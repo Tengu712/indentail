@@ -1,4 +1,4 @@
-use indentail::{Input, Options, parse};
+use indentail::{Input, Options, error::*, parse};
 use std::{env, path::PathBuf, process::ExitCode};
 
 const HELP: &str = "\
@@ -14,12 +14,15 @@ fn main() -> ExitCode {
 
     for path in args {
         let options = Options {
-            input: Input::FilePath(PathBuf::from(path)),
+            input: Input::FilePath(PathBuf::from(&path)),
         };
         match parse(options) {
             Ok(v) => println!("{v:?}"),
             Err(e) => {
-                eprintln!("{e:?}");
+                match e {
+                    IndentailError::Syntax { .. } => eprintln!("{path}:{e}"),
+                    IndentailError::IO(_) => eprintln!("{path}: {e}"),
+                }
                 return ExitCode::from(1);
             }
         }

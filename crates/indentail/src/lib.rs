@@ -1,6 +1,9 @@
-use std::{collections::HashMap, fs, io, path::PathBuf};
+use std::{collections::HashMap, fs, path::PathBuf};
 
+pub mod error;
 mod parser;
+
+use error::*;
 
 #[derive(Debug, Default, Clone, PartialEq)]
 pub struct Node {
@@ -8,33 +11,6 @@ pub struct Node {
     pub options: HashMap<String, String>,
     pub modifiers: Vec<(String, String)>,
     pub children: Vec<Node>,
-}
-
-#[derive(Debug)]
-pub enum IndentailError {
-    Syntax {
-        line: usize,
-        column: usize,
-        detail: SyntaxErrorDetail,
-    },
-    IO(io::Error),
-}
-
-#[derive(Debug, PartialEq)]
-pub enum SyntaxErrorDetail {
-    InvalidToken(String),
-    InvalidColon,
-    InvalidComma,
-    InvalidDot,
-    InvalidLeftParen,
-    InvalidRightParen,
-    UnclosedParen,
-    InvalidLeftBrace,
-    InvalidRightBrace,
-    UnclosedBrace,
-    InvalidEscape(char),
-    UnclosedQuote,
-    DuplicateOption(String),
 }
 
 #[derive(Debug, Clone)]
