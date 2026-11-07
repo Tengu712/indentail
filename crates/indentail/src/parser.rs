@@ -12,6 +12,8 @@ pub(crate) fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
 
     let mut line_count = 1;
     let mut char_count = 1;
+    let mut buffer_start_line_count = 1;
+    let mut buffer_start_char_count = 1;
     let mut buffer = String::default();
 
     let mut state = State::default();
@@ -25,7 +27,11 @@ pub(crate) fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
                 if let Some(node) = n {
                     childrens.last_mut().unwrap().push(node);
                 }
-                state = s.append(line_count, char_count, mem::take(&mut buffer))?;
+                state = s.append(
+                    buffer_start_line_count,
+                    buffer_start_char_count,
+                    mem::take(&mut buffer),
+                )?;
             }
         };
     }
@@ -111,6 +117,10 @@ pub(crate) fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
             }
 
             _ => {
+                if buffer.is_empty() {
+                    buffer_start_line_count = line_count;
+                    buffer_start_char_count = char_count;
+                }
                 buffer.push(c);
                 char_count += 1;
             }

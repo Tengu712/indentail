@@ -176,7 +176,7 @@ fn test_invalid_token() {
     let code = "Tag(opt1 val1)".to_string();
     let expected = IndentailError::Syntax {
         line: 1,
-        column: 14,
+        column: 10,
         detail: SyntaxErrorDetail::InvalidToken("val1".to_string()),
     };
 
