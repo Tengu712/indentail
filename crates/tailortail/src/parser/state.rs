@@ -93,7 +93,7 @@ impl State {
         line_count: usize,
         char_count: usize,
         buffer: String,
-    ) -> Result<Self, IndentailError> {
+    ) -> Result<Self, TailortailError> {
         match self {
             Self::Empty => Ok(Self::Tagged { tag: buffer }),
             Self::Optioning {
@@ -110,7 +110,7 @@ impl State {
                         state: OptionState::Keyed(buffer),
                     })
                 } else {
-                    Err(IndentailError::Syntax {
+                    Err(TailortailError::Syntax {
                         line: line_count,
                         column: char_count,
                         detail: SyntaxErrorDetail::DuplicateOption(buffer),
@@ -152,7 +152,7 @@ impl State {
                 children,
                 state: ModifierState::Valued((name, buffer)),
             }),
-            _ => Err(IndentailError::Syntax {
+            _ => Err(TailortailError::Syntax {
                 line: line_count,
                 column: char_count,
                 detail: SyntaxErrorDetail::InvalidToken(buffer),
@@ -164,7 +164,7 @@ impl State {
         self,
         line_count: usize,
         char_count: usize,
-    ) -> Result<Self, IndentailError> {
+    ) -> Result<Self, TailortailError> {
         match self {
             Self::Tagged { tag } => Ok(Self::Optioning {
                 tag,
@@ -184,7 +184,7 @@ impl State {
                 children,
                 state: ModifierState::Valuing(name),
             }),
-            _ => Err(IndentailError::Syntax {
+            _ => Err(TailortailError::Syntax {
                 line: line_count,
                 column: char_count,
                 detail: SyntaxErrorDetail::InvalidLeftParen,
@@ -196,7 +196,7 @@ impl State {
         self,
         line_count: usize,
         char_count: usize,
-    ) -> Result<Self, IndentailError> {
+    ) -> Result<Self, TailortailError> {
         match self {
             Self::Optioning {
                 tag,
@@ -227,7 +227,7 @@ impl State {
                     state: ModifierState::Empty,
                 })
             }
-            _ => Err(IndentailError::Syntax {
+            _ => Err(TailortailError::Syntax {
                 line: line_count,
                 column: char_count,
                 detail: SyntaxErrorDetail::InvalidRightParen,
@@ -239,7 +239,7 @@ impl State {
         self,
         line_count: usize,
         char_count: usize,
-    ) -> Result<Self, IndentailError> {
+    ) -> Result<Self, TailortailError> {
         match self {
             Self::Optioning {
                 tag,
@@ -250,7 +250,7 @@ impl State {
                 options,
                 state: OptionState::Valuing(key),
             }),
-            _ => Err(IndentailError::Syntax {
+            _ => Err(TailortailError::Syntax {
                 line: line_count,
                 column: char_count,
                 detail: SyntaxErrorDetail::InvalidColon,
@@ -262,7 +262,7 @@ impl State {
         self,
         line_count: usize,
         char_count: usize,
-    ) -> Result<Self, IndentailError> {
+    ) -> Result<Self, TailortailError> {
         match self {
             Self::Optioning {
                 tag,
@@ -276,7 +276,7 @@ impl State {
                     state: OptionState::Empty,
                 })
             }
-            _ => Err(IndentailError::Syntax {
+            _ => Err(TailortailError::Syntax {
                 line: line_count,
                 column: char_count,
                 detail: SyntaxErrorDetail::InvalidComma,
@@ -288,7 +288,7 @@ impl State {
         self,
         line_count: usize,
         char_count: usize,
-    ) -> Result<Self, IndentailError> {
+    ) -> Result<Self, TailortailError> {
         match self {
             Self::Tagged { tag } => Ok(Self::Modifying {
                 tag,
@@ -317,7 +317,7 @@ impl State {
                 children,
                 state: ModifierState::Dotted,
             }),
-            _ => Err(IndentailError::Syntax {
+            _ => Err(TailortailError::Syntax {
                 line: line_count,
                 column: char_count,
                 detail: SyntaxErrorDetail::InvalidDot,
@@ -325,7 +325,7 @@ impl State {
         }
     }
 
-    pub(crate) fn set_children(self, children: Vec<Node>) -> Result<Self, IndentailError> {
+    pub(crate) fn set_children(self, children: Vec<Node>) -> Result<Self, TailortailError> {
         match self {
             Self::Tagged { tag } => Ok(Self::Modifying {
                 tag,

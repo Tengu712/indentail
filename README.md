@@ -1,5 +1,5 @@
-# Indentail
+# Tailortail
 
 ## About
 
-[WIP] Indentail is a data definition language, which is inspired by SwiftUI.
+[WIP] Tailortail is a data definition language, which is inspired by SwiftUI.

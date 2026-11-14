@@ -7,7 +7,7 @@ mod test;
 
 use state::State;
 
-pub fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
+pub fn parse(code: String) -> Result<Vec<Node>, TailortailError> {
     let mut itr = code.chars().filter(|&c| c != '\0').peekable();
 
     let mut line_count = 1;
@@ -90,7 +90,7 @@ pub fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
                 flush!();
 
                 if !matches!(state, State::Tagged { .. } | State::Optioned { .. }) {
-                    return Err(IndentailError::Syntax {
+                    return Err(TailortailError::Syntax {
                         line: line_count,
                         column: char_count,
                         detail: SyntaxErrorDetail::InvalidLeftBrace,
@@ -111,7 +111,7 @@ pub fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
                 }
 
                 let (State::Empty, Some(s), Some(c)) = (s, states.pop(), childrens.pop()) else {
-                    return Err(IndentailError::Syntax {
+                    return Err(TailortailError::Syntax {
                         line: line_count,
                         column: char_count,
                         detail: SyntaxErrorDetail::InvalidRightBrace,
@@ -130,7 +130,7 @@ pub fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
 
                 loop {
                     let Some(c) = itr.next() else {
-                        return Err(IndentailError::Syntax {
+                        return Err(TailortailError::Syntax {
                             line: buffer_start_line_count,
                             column: buffer_start_char_count,
                             detail: SyntaxErrorDetail::UnclosedQuote,
@@ -149,7 +149,7 @@ pub fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
                                 Some('n') => '\n',
                                 Some('\'') => '\'',
                                 Some(c) => {
-                                    return Err(IndentailError::Syntax {
+                                    return Err(TailortailError::Syntax {
                                         line: line_count,
                                         column: char_count,
                                         detail: SyntaxErrorDetail::InvalidEscape(c),
@@ -194,14 +194,14 @@ pub fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
     }
 
     if !matches!(s, State::Empty) {
-        return Err(IndentailError::Syntax {
+        return Err(TailortailError::Syntax {
             line: line_count,
             column: char_count,
             detail: SyntaxErrorDetail::UnclosedParen,
         });
     }
     if !states.is_empty() || childrens.len() != 1 {
-        return Err(IndentailError::Syntax {
+        return Err(TailortailError::Syntax {
             line: line_count,
             column: char_count,
             detail: SyntaxErrorDetail::UnclosedBrace,

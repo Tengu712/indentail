@@ -23,18 +23,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "indentail"
-version = "0.1.0"
-
-[[package]]
-name = "indentail-cli"
-version = "0.1.0"
-dependencies = [
- "bpaf",
- "indentail",
-]
-
-[[package]]
 name = "proc-macro2"
 version = "1.0.107"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -61,6 +49,18 @@ dependencies = [
  "proc-macro2",
  "quote",
  "unicode-ident",
+]
+
+[[package]]
+name = "tailortail"
+version = "0.1.0"
+
+[[package]]
+name = "tailortail-cli"
+version = "0.1.0"
+dependencies = [
+ "bpaf",
+ "tailortail",
 ]
 
 [[package]]

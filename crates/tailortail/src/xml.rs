@@ -10,16 +10,16 @@ pub enum Mode {
     Semantic,
 }
 
-pub fn format(nodes: &[Node], mode: Mode) -> Result<String, IndentailError> {
+pub fn format(nodes: &[Node], mode: Mode) -> Result<String, TailortailError> {
     let mut formatter = Formatter {
-        out: "<?xml version=\"1.1\"?><indentail>".to_string(),
+        out: "<?xml version=\"1.1\"?><tailortail>".to_string(),
         mode,
     };
 
     for node in nodes {
         formatter.node(node)?;
     }
-    formatter.out.push_str("</indentail>");
+    formatter.out.push_str("</tailortail>");
 
     Ok(formatter.out)
 }
@@ -30,7 +30,7 @@ struct Formatter {
 }
 
 impl Formatter {
-    fn node(&mut self, node: &Node) -> Result<(), IndentailError> {
+    fn node(&mut self, node: &Node) -> Result<(), TailortailError> {
         let mut attributes: Vec<(&str, &str)> = node
             .options
             .iter()
@@ -65,7 +65,7 @@ impl Formatter {
             Mode::Aggressive => {
                 for (name, value) in &node.modifiers {
                     if attributes.iter().any(|(k, _)| k == name) {
-                        return Err(IndentailError::DuplicateAttribute(name.clone()));
+                        return Err(TailortailError::DuplicateAttribute(name.clone()));
                     }
                     attributes.push((name, value));
                 }
@@ -87,7 +87,7 @@ impl Formatter {
         Ok(())
     }
 
-    fn element(&mut self, node: &Node, attributes: &[(&str, &str)]) -> Result<(), IndentailError> {
+    fn element(&mut self, node: &Node, attributes: &[(&str, &str)]) -> Result<(), TailortailError> {
         self.open(&node.tag, attributes);
 
         for child in &node.children {

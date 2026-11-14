@@ -17,6 +17,6 @@ pub struct Node {
     pub children: Vec<Node>,
 }
 
-pub fn parse_from_file(path: &Path) -> Result<Vec<Node>, IndentailError> {
-    parse(fs::read_to_string(path).map_err(IndentailError::IO)?)
+pub fn parse_from_file(path: &Path) -> Result<Vec<Node>, TailortailError> {
+    parse(fs::read_to_string(path).map_err(TailortailError::IO)?)
 }

@@ -1,7 +1,7 @@
 use std::{error, fmt, io};
 
 #[derive(Debug)]
-pub enum IndentailError {
+pub enum TailortailError {
     Syntax {
         line: usize,
         column: usize,
@@ -11,7 +11,7 @@ pub enum IndentailError {
     DuplicateAttribute(String),
 }
 
-impl fmt::Display for IndentailError {
+impl fmt::Display for TailortailError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         match self {
             Self::Syntax {
@@ -25,7 +25,7 @@ impl fmt::Display for IndentailError {
     }
 }
 
-impl error::Error for IndentailError {
+impl error::Error for TailortailError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
             Self::Syntax { .. } | Self::DuplicateAttribute(_) => None,

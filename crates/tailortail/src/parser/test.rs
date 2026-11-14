@@ -2,7 +2,7 @@ use super::*;
 
 fn syntax_error(code: &str) -> (usize, usize, SyntaxErrorDetail) {
     match parse(code.to_string()) {
-        Err(IndentailError::Syntax {
+        Err(TailortailError::Syntax {
             line,
             column,
             detail,

@@ -1,13 +1,13 @@
 [package]
-name = "indentail-cli"
+name = "tailortail-cli"
 version = "0.1.0"
 edition = "2024"
 
 [[bin]]
-name = "indentail"
+name = "tailortail"
 path = "src/main.rs"
 doc = false
 
 [dependencies]
 bpaf = { version = "0.9.28", features = ["derive"] }
-indentail = { path = "../indentail" }
+tailortail = { path = "../tailortail" }

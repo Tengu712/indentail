@@ -1,5 +1,5 @@
 use bpaf::Bpaf;
-use indentail::{error::*, parse_from_file, xml};
+use tailortail::{error::*, parse_from_file, xml};
 use std::{fs, path::PathBuf, process::ExitCode};
 
 #[derive(Bpaf)]
@@ -44,7 +44,7 @@ fn main() -> ExitCode {
             Err(e) => {
                 let path = path.display();
                 match e {
-                    IndentailError::Syntax { .. } => eprintln!("{path}:{e}"),
+                    TailortailError::Syntax { .. } => eprintln!("{path}:{e}"),
                     _ => eprintln!("{path}: {e}"),
                 }
                 return ExitCode::from(1);

@@ -1,11 +1,11 @@
 use super::*;
 
-fn xml(code: &str, mode: Mode) -> Result<String, IndentailError> {
+fn xml(code: &str, mode: Mode) -> Result<String, TailortailError> {
     format(&parser::parse(code.to_string()).unwrap(), mode)
 }
 
 fn wrap(body: &str) -> String {
-    format!(r#"<?xml version="1.1"?><indentail>{body}</indentail>"#)
+    format!(r#"<?xml version="1.1"?><tailortail>{body}</tailortail>"#)
 }
 
 #[test]
@@ -30,11 +30,11 @@ fn test_aggressive() {
 fn test_aggressive_duplicate() {
     assert!(matches!(
         xml("Tag(m: v1).m(v2)", Mode::Aggressive),
-        Err(IndentailError::DuplicateAttribute(v)) if v == "m"
+        Err(TailortailError::DuplicateAttribute(v)) if v == "m"
     ));
     assert!(matches!(
         xml("Tag.m(v1).m(v2)", Mode::Aggressive),
-        Err(IndentailError::DuplicateAttribute(v)) if v == "m"
+        Err(TailortailError::DuplicateAttribute(v)) if v == "m"
     ));
 }
 

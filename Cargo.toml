@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "crates/indentail",
-  "crates/indentail-cli",
+  "crates/tailortail",
+  "crates/tailortail-cli",
 ]
 resolver = "3"
