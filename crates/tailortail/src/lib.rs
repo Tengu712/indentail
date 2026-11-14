@@ -3,8 +3,8 @@ use std::{collections::HashMap, fs, path::Path};
 pub mod error;
 mod format;
 mod parser;
-pub mod xml;
 
+pub use format::xml;
 pub use parser::parse;
 
 use error::*;
