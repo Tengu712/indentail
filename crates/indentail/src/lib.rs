@@ -3,6 +3,7 @@ use std::{collections::HashMap, fs, path::PathBuf};
 pub mod error;
 mod format;
 mod parser;
+pub mod xml;
 
 use error::*;
 

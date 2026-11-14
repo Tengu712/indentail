@@ -8,6 +8,7 @@ pub enum IndentailError {
         detail: SyntaxErrorDetail,
     },
     IO(io::Error),
+    DuplicateAttribute(String),
 }
 
 impl fmt::Display for IndentailError {
@@ -19,6 +20,7 @@ impl fmt::Display for IndentailError {
                 detail,
             } => write!(f, "{line}:{column}: {detail}"),
             Self::IO(e) => write!(f, "{e}"),
+            Self::DuplicateAttribute(v) => write!(f, "duplicate attribute '{v}' found"),
         }
     }
 }
@@ -26,7 +28,7 @@ impl fmt::Display for IndentailError {
 impl error::Error for IndentailError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Self::Syntax { .. } => None,
+            Self::Syntax { .. } | Self::DuplicateAttribute(_) => None,
             Self::IO(e) => Some(e),
         }
     }

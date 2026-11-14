@@ -303,6 +303,18 @@ fn test_slum() {
 }
 
 #[test]
+fn test_nul() {
+    let code = "T\0ag(k: 'v\0')".to_string();
+    let expected = vec![Node {
+        tag: "Tag".to_string(),
+        options: HashMap::from([("k".to_string(), "v".to_string())]),
+        ..Default::default()
+    }];
+
+    assert_eq!(parse(code).unwrap(), expected);
+}
+
+#[test]
 fn test_invalid_token() {
     assert_eq!(
         syntax_error("Tag(opt1 val1)"),
