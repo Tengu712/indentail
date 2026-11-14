@@ -9,8 +9,14 @@ struct Args {
     max_width: Option<usize>,
     #[bpaf(long, argument("N"), optional, help("[default: 4]"))]
     indent_spaces: Option<usize>,
-    #[bpaf(long)]
-    json: bool,
+    #[bpaf(
+        long,
+        argument::<String>("MODE"),
+        parse(json_mode),
+        optional,
+        help("[possible values: single, multiple]")
+    )]
+    json: Option<json::Mode>,
     #[bpaf(
         long,
         argument::<String>("MODE"),
@@ -23,6 +29,14 @@ struct Args {
     out_path: Option<PathBuf>,
     #[bpaf(positional("FILE"), some("expected at least one FILE"))]
     paths: Vec<PathBuf>,
+}
+
+fn json_mode(v: String) -> Result<json::Mode, String> {
+    match v.as_str() {
+        "single" => Ok(json::Mode::Single),
+        "multiple" => Ok(json::Mode::Multiple),
+        _ => Err(format!("expected single or multiple, found '{v}'")),
+    }
 }
 
 fn xml_mode(v: String) -> Result<xml::Mode, String> {
@@ -55,31 +69,33 @@ fn main() -> ExitCode {
     }
 
     let out = match (args.xml, args.json) {
-        (Some(_), true) => {
+        (Some(_), Some(_)) => {
             eprintln!("--json and --xml cannot be used at the same time");
             return ExitCode::from(1);
         }
-        (None, true) => {
+        (None, Some(mode)) => {
             warn_native_arrange_options(&args, "--json");
-            json::format(&nodes)
+            json::format(&nodes, mode)
         }
-        (Some(mode), false) => {
+        (Some(mode), None) => {
             warn_native_arrange_options(&args, "--xml");
-            match xml::format(&nodes, mode) {
-                Ok(v) => v,
-                Err(e) => {
-                    eprintln!("{e}");
-                    return ExitCode::from(1);
-                }
-            }
+            xml::format(&nodes, mode)
         }
-        (None, false) => {
+        (None, None) => {
             let max_width = args.max_width.unwrap_or(100);
             let indent_spaces = args.indent_spaces.unwrap_or(4);
-            nodes
+            let out = nodes
                 .iter()
                 .map(|v| v.format(max_width, indent_spaces) + "\n")
-                .collect()
+                .collect();
+            Ok(out)
+        }
+    };
+    let out = match out {
+        Ok(v) => v,
+        Err(e) => {
+            eprintln!("{e}");
+            return ExitCode::from(1);
         }
     };
 

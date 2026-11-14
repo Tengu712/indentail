@@ -9,6 +9,7 @@ pub enum TailortailError {
     },
     IO(io::Error),
     DuplicateAttribute(String),
+    MultipleTopLevelNodes,
 }
 
 impl fmt::Display for TailortailError {
@@ -21,6 +22,7 @@ impl fmt::Display for TailortailError {
             } => write!(f, "{line}:{column}: {detail}"),
             Self::IO(e) => write!(f, "{e}"),
             Self::DuplicateAttribute(v) => write!(f, "duplicate attribute '{v}' found"),
+            Self::MultipleTopLevelNodes => write!(f, "multiple top-level nodes found"),
         }
     }
 }
@@ -28,8 +30,8 @@ impl fmt::Display for TailortailError {
 impl error::Error for TailortailError {
     fn source(&self) -> Option<&(dyn error::Error + 'static)> {
         match self {
-            Self::Syntax { .. } | Self::DuplicateAttribute(_) => None,
             Self::IO(e) => Some(e),
+            _ => None,
         }
     }
 }
