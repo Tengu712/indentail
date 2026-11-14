@@ -9,7 +9,13 @@ struct Args {
     max_width: Option<usize>,
     #[bpaf(long, argument("N"), optional, help("[default: 4]"))]
     indent_spaces: Option<usize>,
-    #[bpaf(long, argument::<String>("MODE"), parse(xml_mode), optional)]
+    #[bpaf(
+        long,
+        argument::<String>("MODE"),
+        parse(xml_mode),
+        optional,
+        help("[possible values: structural, aggressive, semantic]")
+    )]
     xml: Option<xml::Mode>,
     #[bpaf(short, long, argument("PATH"))]
     out_path: Option<PathBuf>,
