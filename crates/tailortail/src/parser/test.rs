@@ -257,6 +257,35 @@ fn test_dot_in_paren() {
 }
 
 #[test]
+fn test_spaces_in_value() {
+    let code = "Tag(a:  b c \t d \t, e: f).m( g  h )".to_string();
+    let expected = vec![Node {
+        tag: "Tag".to_string(),
+        options: HashMap::from([
+            ("a".to_string(), "b c \t d".to_string()),
+            ("e".to_string(), "f".to_string()),
+        ]),
+        modifiers: vec![("m".to_string(), "g  h".to_string())],
+        ..Default::default()
+    }];
+
+    assert_eq!(parse(code).unwrap(), expected);
+}
+
+#[test]
+fn test_empty_quote_value() {
+    let code = "Tag(a: '').m('')".to_string();
+    let expected = vec![Node {
+        tag: "Tag".to_string(),
+        options: HashMap::from([("a".to_string(), "".to_string())]),
+        modifiers: vec![("m".to_string(), "".to_string())],
+        ..Default::default()
+    }];
+
+    assert_eq!(parse(code).unwrap(), expected);
+}
+
+#[test]
 fn test_slum() {
     let code = "
 //s 日本語のあるcomment
@@ -471,5 +500,29 @@ fn test_duplicate_option() {
     assert_eq!(
         syntax_error("Tag(k1: v1, k2: v2, k1: v3)"),
         (1, 21, SyntaxErrorDetail::DuplicateOption("k1".to_string()))
+    );
+}
+
+#[test]
+fn test_empty_quote_key() {
+    assert_eq!(
+        syntax_error("Tag('': v)"),
+        (1, 7, SyntaxErrorDetail::InvalidColon)
+    );
+}
+
+#[test]
+fn test_empty_quote_modifier_name() {
+    assert_eq!(
+        syntax_error("Tag.''(v)"),
+        (1, 7, SyntaxErrorDetail::InvalidLeftParen)
+    );
+}
+
+#[test]
+fn test_newline_in_value() {
+    assert_eq!(
+        syntax_error("Tag(a: b\nc)"),
+        (2, 1, SyntaxErrorDetail::InvalidToken("c".to_string()))
     );
 }

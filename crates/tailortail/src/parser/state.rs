@@ -88,6 +88,19 @@ impl State {
         )
     }
 
+    pub(crate) fn is_valuing(&self) -> bool {
+        matches!(
+            self,
+            Self::Optioning {
+                state: OptionState::Valuing(_),
+                ..
+            } | Self::Modifying {
+                state: ModifierState::Valuing(_),
+                ..
+            }
+        )
+    }
+
     pub(crate) fn append(
         self,
         line_count: usize,

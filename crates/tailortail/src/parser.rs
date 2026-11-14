@@ -15,23 +15,31 @@ pub fn parse(code: String) -> Result<Vec<Node>, TailortailError> {
     let mut buffer_start_line_count = 1;
     let mut buffer_start_char_count = 1;
     let mut buffer = String::default();
+    let mut spaces = String::default();
 
     let mut state = State::default();
     let mut states = vec![];
     let mut childrens = vec![vec![]];
 
+    macro_rules! append {
+        () => {{
+            let (n, s) = state.build();
+            if let Some(node) = n {
+                childrens.last_mut().unwrap().push(node);
+            }
+            state = s.append(
+                buffer_start_line_count,
+                buffer_start_char_count,
+                mem::take(&mut buffer),
+            )?;
+        }};
+    }
+
     macro_rules! flush {
         () => {
+            spaces.clear();
             if !buffer.is_empty() {
-                let (n, s) = state.build();
-                if let Some(node) = n {
-                    childrens.last_mut().unwrap().push(node);
-                }
-                state = s.append(
-                    buffer_start_line_count,
-                    buffer_start_char_count,
-                    mem::take(&mut buffer),
-                )?;
+                append!();
             }
         };
     }
@@ -43,6 +51,11 @@ pub fn parse(code: String) -> Result<Vec<Node>, TailortailError> {
                 itr.find(|&c| c == '\n');
                 line_count += 1;
                 char_count = 1;
+            }
+
+            ' ' | '\t' if !buffer.is_empty() && state.is_valuing() => {
+                spaces.push(c);
+                char_count += 1;
             }
 
             ' ' | '\t' => {
@@ -172,7 +185,9 @@ pub fn parse(code: String) -> Result<Vec<Node>, TailortailError> {
                     }
                 }
 
-                flush!();
+                if !buffer.is_empty() || state.is_valuing() {
+                    append!();
+                }
             }
 
             _ => {
@@ -180,6 +195,8 @@ pub fn parse(code: String) -> Result<Vec<Node>, TailortailError> {
                     buffer_start_line_count = line_count;
                     buffer_start_char_count = char_count;
                 }
+                buffer.push_str(&spaces);
+                spaces.clear();
                 buffer.push(c);
                 char_count += 1;
             }
