@@ -1,6 +1,6 @@
 use bpaf::Bpaf;
-use tailortail::{error::*, parse_from_file, xml};
 use std::{fs, path::PathBuf, process::ExitCode};
+use tailortail::{error::*, json, parse_from_file, xml};
 
 #[derive(Bpaf)]
 #[bpaf(options)]
@@ -9,6 +9,8 @@ struct Args {
     max_width: Option<usize>,
     #[bpaf(long, argument("N"), optional, help("[default: 4]"))]
     indent_spaces: Option<usize>,
+    #[bpaf(long)]
+    json: bool,
     #[bpaf(
         long,
         argument::<String>("MODE"),
@@ -38,8 +40,8 @@ fn main() -> ExitCode {
     let args = args().run();
     let mut nodes = vec![];
 
-    for path in args.paths {
-        match parse_from_file(&path) {
+    for path in args.paths.iter() {
+        match parse_from_file(path) {
             Ok(v) => nodes.extend(v),
             Err(e) => {
                 let path = path.display();
@@ -52,14 +54,17 @@ fn main() -> ExitCode {
         }
     }
 
-    let out = match args.xml {
-        Some(mode) => {
-            if args.max_width.is_some() {
-                eprintln!("warning: --max-width is ignored with --xml");
-            }
-            if args.indent_spaces.is_some() {
-                eprintln!("warning: --indent-spaces is ignored with --xml");
-            }
+    let out = match (args.xml, args.json) {
+        (Some(_), true) => {
+            eprintln!("--json and --xml cannot be used at the same time");
+            return ExitCode::from(1);
+        }
+        (None, true) => {
+            warn_native_arrange_options(&args, "--json");
+            json::format(&nodes)
+        }
+        (Some(mode), false) => {
+            warn_native_arrange_options(&args, "--xml");
             match xml::format(&nodes, mode) {
                 Ok(v) => v,
                 Err(e) => {
@@ -68,7 +73,7 @@ fn main() -> ExitCode {
                 }
             }
         }
-        None => {
+        (None, false) => {
             let max_width = args.max_width.unwrap_or(100);
             let indent_spaces = args.indent_spaces.unwrap_or(4);
             nodes
@@ -88,4 +93,13 @@ fn main() -> ExitCode {
     }
 
     ExitCode::from(0)
+}
+
+fn warn_native_arrange_options(args: &Args, subject: &'static str) {
+    if args.max_width.is_some() {
+        eprintln!("warning: --max-width is ignored with {subject}");
+    }
+    if args.indent_spaces.is_some() {
+        eprintln!("warning: --indent-spaces is ignored with {subject}");
+    }
 }

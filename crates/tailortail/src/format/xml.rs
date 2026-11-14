@@ -3,7 +3,7 @@ use super::*;
 #[cfg(test)]
 mod test;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 pub enum Mode {
     Structural,
     Aggressive,

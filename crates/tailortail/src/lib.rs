@@ -4,7 +4,7 @@ pub mod error;
 mod format;
 mod parser;
 
-pub use format::xml;
+pub use format::{json, xml};
 pub use parser::parse;
 
 use error::*;
