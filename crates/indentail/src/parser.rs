@@ -7,7 +7,7 @@ mod test;
 
 use state::State;
 
-pub(crate) fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
+pub fn parse(code: String) -> Result<Vec<Node>, IndentailError> {
     let mut itr = code.chars().filter(|&c| c != '\0').peekable();
 
     let mut line_count = 1;

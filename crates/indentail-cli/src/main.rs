@@ -1,5 +1,5 @@
 use bpaf::Bpaf;
-use indentail::{Input, Options, error::*, parse, xml};
+use indentail::{error::*, parse_from_file, xml};
 use std::{fs, path::PathBuf, process::ExitCode};
 
 #[derive(Bpaf)]
@@ -33,10 +33,7 @@ fn main() -> ExitCode {
     let mut nodes = vec![];
 
     for path in args.paths {
-        let options = Options {
-            input: Input::FilePath(path.clone()),
-        };
-        match parse(options) {
+        match parse_from_file(&path) {
             Ok(v) => nodes.extend(v),
             Err(e) => {
                 let path = path.display();

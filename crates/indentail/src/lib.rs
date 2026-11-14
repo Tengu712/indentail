@@ -1,9 +1,11 @@
-use std::{collections::HashMap, fs, path::PathBuf};
+use std::{collections::HashMap, fs, path::Path};
 
 pub mod error;
 mod format;
 mod parser;
 pub mod xml;
+
+pub use parser::parse;
 
 use error::*;
 
@@ -15,26 +17,6 @@ pub struct Node {
     pub children: Vec<Node>,
 }
 
-#[derive(Debug, Clone)]
-pub struct Options {
-    pub input: Input,
-}
-
-#[derive(Debug, Clone)]
-pub enum Input {
-    Inline(String),
-    FilePath(PathBuf),
-}
-
-impl Input {
-    fn get(self) -> Result<String, IndentailError> {
-        match self {
-            Self::Inline(v) => Ok(v),
-            Self::FilePath(v) => fs::read_to_string(v).map_err(IndentailError::IO),
-        }
-    }
-}
-
-pub fn parse(option: Options) -> Result<Vec<Node>, IndentailError> {
-    parser::parse(option.input.get()?)
+pub fn parse_from_file(path: &Path) -> Result<Vec<Node>, IndentailError> {
+    parse(fs::read_to_string(path).map_err(IndentailError::IO)?)
 }
