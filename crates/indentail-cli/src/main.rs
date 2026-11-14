@@ -5,10 +5,10 @@ use std::{fs, path::PathBuf, process::ExitCode};
 #[derive(Bpaf)]
 #[bpaf(options)]
 struct Args {
-    #[bpaf(long, argument("N"), fallback(100), display_fallback)]
-    max_width: usize,
-    #[bpaf(long, argument("N"), fallback(4), display_fallback)]
-    indent_spaces: usize,
+    #[bpaf(long, argument("N"), optional, help("[default: 100]"))]
+    max_width: Option<usize>,
+    #[bpaf(long, argument("N"), optional, help("[default: 4]"))]
+    indent_spaces: Option<usize>,
     #[bpaf(long, argument::<String>("MODE"), parse(xml_mode), optional)]
     xml: Option<xml::Mode>,
     #[bpaf(short, long, argument("PATH"))]
@@ -47,17 +47,29 @@ fn main() -> ExitCode {
     }
 
     let out = match args.xml {
-        Some(mode) => match xml::format(&nodes, mode) {
-            Ok(v) => v,
-            Err(e) => {
-                eprintln!("{e}");
-                return ExitCode::from(1);
+        Some(mode) => {
+            if args.max_width.is_some() {
+                eprintln!("warning: --max-width is ignored with --xml");
             }
-        },
-        None => nodes
-            .iter()
-            .map(|v| v.format(args.max_width, args.indent_spaces) + "\n")
-            .collect(),
+            if args.indent_spaces.is_some() {
+                eprintln!("warning: --indent-spaces is ignored with --xml");
+            }
+            match xml::format(&nodes, mode) {
+                Ok(v) => v,
+                Err(e) => {
+                    eprintln!("{e}");
+                    return ExitCode::from(1);
+                }
+            }
+        }
+        None => {
+            let max_width = args.max_width.unwrap_or(100);
+            let indent_spaces = args.indent_spaces.unwrap_or(4);
+            nodes
+                .iter()
+                .map(|v| v.format(max_width, indent_spaces) + "\n")
+                .collect()
+        }
     };
 
     if let Some(path) = args.out_path {
